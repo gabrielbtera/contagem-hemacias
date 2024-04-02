@@ -51,8 +51,14 @@ def RemoveGlobulosBrancos(img, default=True):
 
     # limites inferiores e superiores das células vermelhas
    
-    lower_red = np.array([80, 13, 160])
-    upper_red = np.array([150, 50, 200])
+    # lower_red = np.array([80, 13, 160])
+    # upper_red = np.array([150, 50, 200])
+
+    lower_red = np.array([140, 50, 50])
+    upper_red = np.array([255, 255, 255])
+
+    lower_red = np.array([150, 0, 0])
+    upper_red = np.array([255, 255, 255])
     
 
 
@@ -66,6 +72,7 @@ def RemoveGlobulosBrancos(img, default=True):
     kernel = np.ones((k,k),np.uint8)
     mask = cv2.morphologyEx(mask, cv2.MORPH_CLOSE, kernel)
     mask = cv2.morphologyEx(mask, cv2.MORPH_OPEN, kernel)
+    mask = cv2.bitwise_not(mask)
    
     result = cv2.bitwise_and(img, img, mask=mask)
 
@@ -74,7 +81,7 @@ def RemoveGlobulosBrancos(img, default=True):
 
 def binarizacao_limiar_simples(img):
     binary=img.copy()
-    limiar = img.max()*(95/256)
+    limiar = img.max()*(170/256)
 
     binary[binary<=limiar]=0
     binary[binary > 0]=1
@@ -84,7 +91,7 @@ def binarizacao_limiar_simples(img):
     bin = afterMedian > 90
 
 
-    return bin.astype(np.uint8) * 255
+    return binary.astype(np.uint8) * 255
 
 def preprocessamento_sala_aula(img):
     white_cells_img = img.copy()

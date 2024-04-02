@@ -12,7 +12,7 @@ from skimage import io
 nome_image = 'BloodImage_00339.jpg'
 # nome_image = 'BloodImage_00343.jpg'
 # nome_image = 'BloodImage_00351.jpg'
-nome_image = 'BloodImage_00364.jpg'
+# nome_image = 'BloodImage_00364.jpg'
 # nome_image = 'BloodImage_00396.jpg'
 
 
@@ -21,13 +21,43 @@ image_color = io.imread(nome_image)
 
 
 
+def my_adaptiveThreshold(img, maxValue, adaptiveMethod, thresholdType, blockSize, C):
+    
+    tamanho_borda = blockSize // 2
+
+    # Adiciona borda à imagem de entrada
+    borda_img = np.pad(img, tamanho_borda, mode='constant')
+
+    # Inicializa a imagem de saída
+    img_saida = np.zeros_like(img)
+
+    j, i = img.shape
+
+    # Aplica o limiar adaptativo
+    for y in range(tamanho_borda, j + tamanho_borda):
+        for x in range(tamanho_borda, i + tamanho_borda):
+            roi = borda_img[y - tamanho_borda:y + tamanho_borda + 1, x - tamanho_borda:x + tamanho_borda + 1]
+            if adaptiveMethod == 0:
+                threshold_value = np.mean(roi) - C
+            else:
+                threshold_value = np.mean(roi) - C * np.std(roi) / blockSize
+            if thresholdType == 0:
+                img_saida[y - tamanho_borda, x - tamanho_borda] = maxValue if img[y - tamanho_borda, x - tamanho_borda] > threshold_value else 0
+            else:
+                img_saida[y - tamanho_borda, x - tamanho_borda] = 0 if img[y - tamanho_borda, x - tamanho_borda] > threshold_value else maxValue
+
+    return img_saida
+
 def RemoveGlobulosBrancos(img, default=True):
     hsv = cv2.cvtColor(img, cv2.COLOR_BGR2HSV)
 
     # limites inferiores e superiores das células vermelhas
    
-    lower_red = np.array([80, 13, 170])
-    upper_red = np.array([150, 50, 200])
+    lower_red = np.array([100, 0, 0])
+    upper_red = np.array([160, 255, 255])
+
+    lower_red = np.array([150, 0, 0])
+    upper_red = np.array([180, 255, 255])
     
 
 
@@ -39,7 +69,9 @@ def RemoveGlobulosBrancos(img, default=True):
     mask = cv2.morphologyEx(mask, cv2.MORPH_CLOSE, kernel)
     mask = cv2.morphologyEx(mask, cv2.MORPH_OPEN, kernel)
    
+    mask = cv2.bitwise_not(mask)
     result = cv2.bitwise_and(img, img, mask=mask)
+
 
 
     return result
@@ -71,8 +103,9 @@ def binariza_imagem_builtin(img_processada):
 
     ajustamos para 
     '''
-    binary_img = cv2.adaptiveThreshold(img_processada, 255, cv2.ADAPTIVE_THRESH_MEAN_C, cv2.THRESH_BINARY_INV, 15, 8)
-  
+    binary_img = cv2.adaptiveThreshold(img_processada, 255, cv2.ADAPTIVE_THRESH_MEAN_C, cv2.THRESH_BINARY_INV, 15, 14)
+
+    # binary_img = my_adaptiveThreshold(img_processada, 255, cv2.ADAPTIVE_THRESH_MEAN_C, cv2.THRESH_BINARY_INV, 15, 8)
 
     # Aplicacao da erosão  para preencher buracos
     k = 3
@@ -97,7 +130,7 @@ def identifica_hemacias(img, binary_image):
     celulas = img.copy()
 
     circles = cv2.HoughCircles(binary_image,cv2.HOUGH_GRADIENT,1,60,
-                             param1=50,param2=17,minRadius=30,maxRadius=60)
+                             param1=50,param2=13,minRadius=30,maxRadius=60)
     
     hemacias_count = 0
 
