@@ -14,7 +14,7 @@ nome_image = 'BloodImage_00339.jpg'
 # nome_image = 'BloodImage_00343.jpg'
 # nome_image = 'BloodImage_00351.jpg'
 # nome_image = 'BloodImage_00364.jpg'
-# nome_image = 'BloodImage_00396.jpg'
+nome_image = 'BloodImage_00396.jpg'
 
 
 
@@ -103,22 +103,23 @@ def preprocessamento_sala_aula(img):
 
 
 
-    sobel_img = cv2.Sobel(binary_img, cv2.CV_8U, 1, 1, ksize=15, borderType=cv2.BORDER_REPLICATE) 
+    sobel_img = cv2.Sobel(binary_img, cv2.CV_8U, 1, 1, ksize=7, borderType=cv2.BORDER_REPLICATE, delta=2) 
     
-    k = 2
-    i = 4
+    k = 3
+    i = 3
     kernel = np.ones((k,k),np.uint8)
-    eroding_img = cv2.erode(sobel_img, kernel, i)
+    # eroding_img = cv2.erode(sobel_img, kernel, i)
 
 
     # Aplicação de Fechamento para remoção de pontos (ruídos)
-    closing_img = cv2.morphologyEx(eroding_img, cv2.MORPH_CLOSE, kernel)
+    # closing_img = cv2.morphologyEx(sobel_img, cv2.MORPH_CLOSE, kernel)
+    closing_img = cv2.morphologyEx(sobel_img, cv2.MORPH_OPEN, kernel)
 
     # Usando o inverso da imagem para detecção das células
     inverse_img = 255-closing_img
 
     circles = cv2.HoughCircles(inverse_img,cv2.HOUGH_GRADIENT,1, 60,
-                             param1=50,param2=16,minRadius=30,maxRadius=59)
+                             param1=50,param2=15,minRadius=30,maxRadius=59)
     
     
     white_cells_count = 0
