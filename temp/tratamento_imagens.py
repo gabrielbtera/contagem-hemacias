@@ -11,8 +11,8 @@ from skimage import io
 
 nome_image = 'BloodImage_00339.jpg'
 # nome_image = 'BloodImage_00343.jpg'
-# nome_image = 'BloodImage_00351.jpg'
-# nome_image = 'BloodImage_00364.jpg'
+nome_image = 'BloodImage_00351.jpg'
+# nome_image = 'BloodImage_00402.jpg'
 # nome_image = 'BloodImage_00396.jpg'
 
 
@@ -21,9 +21,9 @@ image_color = io.imread(nome_image)
 
 
 
-def my_adaptiveThreshold(img, maxValue, adaptiveMethod, thresholdType, blockSize, C):
+def meu_adaptiveThreshold(img, max_level, metodo, type_threshold, block_size, C):
     
-    tamanho_borda = blockSize // 2
+    tamanho_borda = block_size // 2
 
     # Adiciona borda à imagem de entrada
     borda_img = np.pad(img, tamanho_borda, mode='constant')
@@ -37,27 +37,35 @@ def my_adaptiveThreshold(img, maxValue, adaptiveMethod, thresholdType, blockSize
     for y in range(tamanho_borda, j + tamanho_borda):
         for x in range(tamanho_borda, i + tamanho_borda):
             roi = borda_img[y - tamanho_borda:y + tamanho_borda + 1, x - tamanho_borda:x + tamanho_borda + 1]
-            if adaptiveMethod == 0:
+            
+            # Aplica o threshold da media
+            if metodo == 0:
                 threshold_value = np.mean(roi) - C
+            # aplica o threshold gaussiano
             else:
-                threshold_value = np.mean(roi) - C * np.std(roi) / blockSize
-            if thresholdType == 0:
-                img_saida[y - tamanho_borda, x - tamanho_borda] = maxValue if img[y - tamanho_borda, x - tamanho_borda] > threshold_value else 0
+                threshold_value = np.mean(roi) - C * np.std(roi) / block_size
+            
+            # aplica o threshold gaussiano
+            if type_threshold == 0:
+                img_saida[y - tamanho_borda, x - tamanho_borda] = max_level if img[y - tamanho_borda, x - tamanho_borda] > threshold_value else 0
+            
+            # aplica o threshold da  media
             else:
-                img_saida[y - tamanho_borda, x - tamanho_borda] = 0 if img[y - tamanho_borda, x - tamanho_borda] > threshold_value else maxValue
+                img_saida[y - tamanho_borda, x - tamanho_borda] = 0 if img[y - tamanho_borda, x - tamanho_borda] > threshold_value else max_level
 
     return img_saida
 
-def RemoveGlobulosBrancos(img, default=True):
+def RemoveGlobulosBrancos(img):
     hsv = cv2.cvtColor(img, cv2.COLOR_BGR2HSV)
 
-    # limites inferiores e superiores das células vermelhas
-   
-    lower_red = np.array([100, 0, 0])
-    upper_red = np.array([160, 255, 255])
+    
 
-    lower_red = np.array([150, 0, 0])
-    upper_red = np.array([180, 255, 255])
+    # limites inferiores e superiores das células vermelhas
+    lower_red = np.array([160, 0, 0])
+    upper_red = np.array([180, 161, 247])
+
+    # lower_red = np.array([80, 0, 0])
+    # upper_red = np.array([150, 255, 255])
     
 
 
@@ -103,18 +111,24 @@ def binariza_imagem_builtin(img_processada):
 
     ajustamos para 
     '''
-    binary_img = cv2.adaptiveThreshold(img_processada, 255, cv2.ADAPTIVE_THRESH_MEAN_C, cv2.THRESH_BINARY_INV, 15, 14)
+    # binary_img = cv2.adaptiveThreshold(img_processada, 255, cv2.ADAPTIVE_THRESH_MEAN_C, cv2.THRESH_BINARY_INV, 15, 14)
 
-    # binary_img = my_adaptiveThreshold(img_processada, 255, cv2.ADAPTIVE_THRESH_MEAN_C, cv2.THRESH_BINARY_INV, 15, 8)
+    binary_img = meu_adaptiveThreshold(img_processada, 255, 0, 1, 15, 7)
 
     # Aplicacao da erosão  para preencher buracos
-    k = 3
-    i = 4
+    k = 5
+    i = 5
     kernel = np.ones((k,k),np.uint8)
-    erode_img = cv2.erode(binary_img, kernel, i)
+    img_fechada = cv2.erode(binary_img, kernel, i)
 
      # Usa o fechamento para remover ruidos
-    img_fechada = cv2.morphologyEx(erode_img, cv2.MORPH_CLOSE, kernel)
+    
+    # img_fechada = cv2.morphologyEx(erode_img, cv2.MORPH_CLOSE, kernel)
+    # k = 2
+    # i = 1
+    # kernel = np.ones((k,k),np.uint8)
+    # img_fechada = cv2.dilate(img_fechada, kernel, i)
+
 
     inverso = 255-img_fechada
 
@@ -129,8 +143,8 @@ def identifica_hemacias(img, binary_image):
 
     celulas = img.copy()
 
-    circles = cv2.HoughCircles(binary_image,cv2.HOUGH_GRADIENT,1,60,
-                             param1=50,param2=13,minRadius=30,maxRadius=60)
+    circles = cv2.HoughCircles(binary_image,cv2.HOUGH_GRADIENT,1,68,
+                             param1=50,param2=11,minRadius=30,maxRadius=58)
     
     hemacias_count = 0
 
