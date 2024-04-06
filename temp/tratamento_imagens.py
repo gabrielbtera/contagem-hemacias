@@ -10,15 +10,42 @@ from skimage import io
 
 
 nome_image = 'BloodImage_00339.jpg'
-# nome_image = 'BloodImage_00343.jpg'
-nome_image = 'BloodImage_00351.jpg'
-# nome_image = 'BloodImage_00402.jpg'
+nome_image = 'BloodImage_00343.jpg'
+# nome_image = 'BloodImage_00351.jpg'
+nome_image = 'BloodImage_00402.jpg'
 # nome_image = 'BloodImage_00396.jpg'
 
 
 
 image_color = io.imread(nome_image)
 
+
+def manual_inRange(hsv, lower, upper):
+
+    h, s, v = hsv[:,:,0], hsv[:,:,1], hsv[:,:,2]
+    
+    h_mask = np.logical_and(h >= lower[0], h <= upper[0])
+    s_mask = np.logical_and(s >= lower[1], s <= upper[1])
+    v_mask = np.logical_and(v >= lower[2], v <= upper[2])
+    
+    return (h_mask & s_mask & v_mask).astype(np.uint8) * 255
+
+
+
+def manual_bitwise_and(img1, img2, mask, negacao=False):
+    if img1.shape[:2] != img2.shape[:2] or img1.shape[:2] != mask.shape[:2]:
+        raise ValueError("I tamaho das imagens e da mascara deve ser iguais.")
+    
+    h, w, _ = img1.shape
+
+    result_img = np.zeros((h, w, _), dtype=np.uint8)
+    
+    for i in range(h):
+        for j in range(w):
+            mask_tratada = ~mask[i, j] if negacao else mask[i, j] 
+            result_img[i, j] = img1[i, j] & img2[i, j] & mask_tratada
+    
+    return result_img
 
 
 def meu_adaptiveThreshold(img, max_level, metodo, type_threshold, block_size, C):
@@ -70,15 +97,18 @@ def RemoveGlobulosBrancos(img):
 
 
     # Máscara contendo range (no canal hsv) 
-    mask = cv2.inRange(hsv,lower_red,upper_red)
+    # mask = cv2.inRange(hsv,lower_red,upper_red)
+
+    mask = manual_inRange(hsv, lower_red, upper_red)
 
     # remove os ruídos mínimos  que estão na imagem
     kernel = np.ones((12,12),np.uint8)
     mask = cv2.morphologyEx(mask, cv2.MORPH_CLOSE, kernel)
     mask = cv2.morphologyEx(mask, cv2.MORPH_OPEN, kernel)
    
-    mask = cv2.bitwise_not(mask)
-    result = cv2.bitwise_and(img, img, mask=mask)
+    # mask = cv2.bitwise_not(mask)
+    result = manual_bitwise_and(img, img, mask=mask, negacao=True)
+    # result = cv2.bitwise_and(img, img, mask=mask)
 
 
 
@@ -99,7 +129,6 @@ def preprocessamento(hemacias):
     # Aplica o filtro gaussiano 5x5 pra remover ruidos indesejados
     k_mask_gaussian = 5
     mask_gaussian = (k_mask_gaussian, k_mask_gaussian)
-    
     gaussian_img = cv2.GaussianBlur(eq_img, mask_gaussian, 0)
 
     return gray_redCells, eq_img, gaussian_img
