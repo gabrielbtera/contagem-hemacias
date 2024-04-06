@@ -43,7 +43,7 @@ def manual_bitwise_and(img1, img2, mask, negacao=False):
     for i in range(h):
         for j in range(w):
             mask_tratada = ~mask[i, j] if negacao else mask[i, j] 
-            result_img[i, j] = img1[i, j] & img2[i, j] & mask_tratada
+            result_img[i, j] = img1[i, j] & mask_tratada
     
     return result_img
 
