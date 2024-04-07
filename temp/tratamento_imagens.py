@@ -12,7 +12,7 @@ from skimage import io
 nome_image = 'BloodImage_00339.jpg'
 nome_image = 'BloodImage_00343.jpg'
 # nome_image = 'BloodImage_00351.jpg'
-nome_image = 'BloodImage_00402.jpg'
+# nome_image = 'BloodImage_00402.jpg'
 # nome_image = 'BloodImage_00396.jpg'
 
 
@@ -32,8 +32,8 @@ def manual_inRange(hsv, lower, upper):
 
 
 
-def manual_bitwise_and(img1, img2, mask, negacao=False):
-    if img1.shape[:2] != img2.shape[:2] or img1.shape[:2] != mask.shape[:2]:
+def manual_bitwise_and(img1, mask, negacao=False):
+    if img1.shape[:2] != mask.shape[:2]:
         raise ValueError("I tamaho das imagens e da mascara deve ser iguais.")
     
     h, w, _ = img1.shape
@@ -107,7 +107,7 @@ def RemoveGlobulosBrancos(img):
     mask = cv2.morphologyEx(mask, cv2.MORPH_OPEN, kernel)
    
     # mask = cv2.bitwise_not(mask)
-    result = manual_bitwise_and(img, img, mask=mask, negacao=True)
+    result = manual_bitwise_and(img, mask=mask, negacao=True)
     # result = cv2.bitwise_and(img, img, mask=mask)
 
 
@@ -134,7 +134,7 @@ def preprocessamento(hemacias):
     return gray_redCells, eq_img, gaussian_img
 
 
-def binariza_imagem_builtin(img_processada):
+def binariza_imagem(img_processada):
     '''
     Binariza a imagem  de forma adaptativa com o uso do método obtivemos os melhores resultados para as imagens selecionadas
 
@@ -173,7 +173,7 @@ def identifica_hemacias(img, binary_image):
     celulas = img.copy()
 
     circles = cv2.HoughCircles(binary_image,cv2.HOUGH_GRADIENT,1,68,
-                             param1=50,param2=11,minRadius=30,maxRadius=58)
+                             param1=33,param2=11,minRadius=30,maxRadius=58)
     
     hemacias_count = 0
 
@@ -246,7 +246,7 @@ def deteccao_main(img):
 
     img_gray, img_eq, img_gaussian = preprocessamento(img_hemacias)
 
-    img_binary, img_erode, img_inverse = binariza_imagem_builtin(img_gaussian)
+    img_binary, img_erode, img_inverse = binariza_imagem(img_gaussian)
 
     hemacias, hemacias_count =  identifica_hemacias(img, img_inverse)
 
