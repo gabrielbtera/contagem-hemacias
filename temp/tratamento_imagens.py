@@ -9,11 +9,13 @@ from skimage import io
 # Intervalo HSV 2: [ 30  14 214]
 
 
+nome_image = 'BloodImage_00351.jpg'
 nome_image = 'BloodImage_00339.jpg'
 nome_image = 'BloodImage_00343.jpg'
-# nome_image = 'BloodImage_00351.jpg'
-# nome_image = 'BloodImage_00402.jpg'
-# nome_image = 'BloodImage_00396.jpg'
+nome_image = 'BloodImage_00408.jpg'
+nome_image = 'BloodImage_00396.jpg'
+nome_image = 'BloodImage_00364.jpg'
+
 
 
 
@@ -173,7 +175,7 @@ def identifica_hemacias(img, binary_image):
     celulas = img.copy()
 
     circles = cv2.HoughCircles(binary_image,cv2.HOUGH_GRADIENT,1,68,
-                             param1=33,param2=11,minRadius=30,maxRadius=58)
+                             param1=33,param2=12,minRadius=30,maxRadius=58)
     
     hemacias_count = 0
 
